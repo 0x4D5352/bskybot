@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 )
 
 // Things I need to make this work:
@@ -18,12 +19,19 @@ import (
 */
 
 func main() {
+	username := os.Getenv("BLUESKY_HANDLE")
+	appPassword := os.Getenv("BLUESKY_PASSWORD")
+	agent := BskyAgent{
+		client: &http.Client{},
+		host:   "https://bsky.social",
+	}
+	agent.login(username, appPassword)
 }
 
 type BskyAgent struct {
 	client  *http.Client
 	session *SessionToken
-	host    *url.URL
+	host    string
 }
 
 type SessionToken struct {
@@ -66,9 +74,10 @@ type Post struct {
 	}
 }
 
-func (b BskyAgent) login() {
+func (b BskyAgent) login(u, p string) {
 }
 
 func (b BskyAgent) post(c string) {
-	b.client.Get("test")
+	body := strings.NewReader("test post")
+	b.client.Post("test", "application/json", body)
 }

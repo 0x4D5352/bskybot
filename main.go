@@ -1,15 +1,17 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/joho/godotenv"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -22,24 +24,28 @@ func main() {
 	appPassword := os.Getenv("BLUESKY_PASSWORD")
 	fmt.Println("Creating new session...")
 	agent := &BskyAgent{
-		Client:  &http.Client{},
-		Host:    "https://bsky.social",
-		Session: SessionToken{},
-		Posts:   []Posts{},
+		Client:   http.Client{},
+		Host:     "https://bsky.social",
+		Session:  SessionToken{},
+		Posts:    []Posts{},
+		IoReader: bufio.NewScanner(os.Stdin),
 	}
 	agent.login(username, appPassword)
 	fmt.Println("Connected!")
+	fmt.Print("Please enter your post:\n> ")
+	post := agent.getInput()
 	fmt.Println("Posting...")
-	agent.post(fmt.Sprintf("i'm posting this at %s!!!!!!!!!", time.Now().Format(time.RFC3339)))
+	agent.post(post)
 	fmt.Println("Shutting down...")
 	os.Exit(0)
 }
 
 type BskyAgent struct {
-	Client  *http.Client
-	Session SessionToken
-	Host    string
-	Posts   []Posts
+	Client   http.Client
+	Session  SessionToken
+	Host     string
+	Posts    []Posts
+	IoReader *bufio.Scanner
 }
 
 type SessionToken struct {
@@ -171,4 +177,9 @@ func (b *BskyAgent) post(c string) {
 		Response: response,
 	})
 	fmt.Printf("Posted %s at %s!\n", c, createdAt)
+}
+
+func (b *BskyAgent) getInput() string {
+	b.IoReader.Scan()
+	return b.IoReader.Text()
 }
